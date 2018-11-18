@@ -1,0 +1,92 @@
+<html>
+  <head>
+    <!-- Loading in TensorFlow.js version 0.11.2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.11.2"> </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js"> </script>
+  </head>
+  <body>
+        <select id="thedropdown">
+                <option value="1">one</option>
+                <option value="2">two</option>
+              </select>
+            </br>
+                <input type="submit" value="Submit1" id='trash'>
+        </br>
+    </br>
+    x: <input type="text" id="x" />
+    y: <input type="text" id="y" />
+
+    <input type="button" id="append" value="submit">
+
+    <div style="padding:50px">
+        <canvas id="myChart" width="300" height="150"></canvas>
+    </div>
+
+    <script>
+        
+        let i;
+        var xs = [] // starts empty, to be populated with .push
+        var ys = [] // starts empty, to be populated with .push
+        var bestfit = [] // to be populated by tf.js
+        document.getElementById('trash').onclick = ()=>{
+            var a = document.getElementById("thedropdown");
+            alert(a.options[a.selectedIndex].value);
+        }
+        
+        //Create the model
+        const model = tf.sequential();
+model.add(tf.layers.dense({units: 512, inputShape: [1]})); // layer 1
+model.add(tf.layers.dense({units: 256, inputShape: [128], activation: "relu"})); // layer 2
+for(i=0;i<3;i++){
+    model.add(tf.layers.dense({units: 128, inputShape: [128], activation: "relu"}));
+}
+model.add(tf.layers.dense({units: 1, inputShape: [128]})); // output layer
+model.compile({loss: 'meanSquaredError', optimizer: 'adam'}); // compile with params
+console.log(model.summary);
+
+
+        document.getElementById('x').value = 1; // create a starting value for our x
+
+        // the append id is given to our submit button, this will be called
+        document.getElementById("append").onclick = function(){
+            var x = document.getElementById("x").value; // grab the current value for x
+            var y = document.getElementById("y").value; // grab the current value for y
+            xs.push(x) // append that value to the xs
+            ys.push(y) // append that value to the ys
+            document.getElementById('x').value = parseInt(x)+1; // add 1 to the x automatically
+            data=[];
+            for(var i=0;i<xs.length;i++){
+            console.log(`${i}`);
+            data.push({x:xs[i],y:ys[i]});
+            }
+            // Train the model...then:
+            model.fit(tf.tensor(xs), tf.tensor(ys), {epochs:150}).then(() => {
+                bestfit = model.predict(tf.tensor(xs, [xs.length, 1])).dataSync(); // create best-fit line from xs data
+                var ctx = document.getElementById("myChart").getContext('2d'); // begin chart
+                // Chart data and settings:
+                var myChart = new Chart(ctx, {
+                    type: 'line',
+                    options: {scales:{yAxes: [{ticks: {beginAtZero: true}}]}},
+                    data: {
+                        labels: xs,
+                        datasets: [
+                        {
+                            label: 'Best Fit line',
+                            data: bestfit,
+                            borderWidth: 1,
+                            borderColor: '#FF0000',
+                            backgroundColor: 'rgba(1,1,1,0)'
+                        },{
+      type: 'bubble',
+      label: 'Real',
+      data: data,
+      backgroundColor: "rgba(76,78,80, .7)",
+      borderColor: "transparent"
+    },]
+                    },
+                });
+              });
+        }
+    </script>
+  </body>
+</html>
