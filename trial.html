@@ -16,9 +16,12 @@
 
     <script>
         
-        var xs = [] // starts empty, to be populated with .push
-        var ys = [] // starts empty, to be populated with .push
-        var bestfit = [] // to be populated by tf.js
+        const xs = [1,2,3,4,5,6,7,8,9,10]; // starts empty, to be populated with .push
+        const ys = [];
+        for(let i=0;i<xs.length;i++){
+          ys[i]=3*xs[i]+Math.random()*100;
+        } // starts empty, to be populated with .push
+        var bestfit = []; // to be populated by tf.js
         
         //Create the model
         const model = tf.sequential();
@@ -29,15 +32,6 @@ model.add(tf.layers.dense({units: 1, inputShape: [128]})); // output layer
 model.compile({loss: 'meanSquaredError', optimizer: 'adam'}); // compile with params
 
 
-        document.getElementById('x').value = 1; // create a starting value for our x
-
-        // the append id is given to our submit button, this will be called
-        document.getElementById("append").onclick = function(){
-            var x = document.getElementById("x").value; // grab the current value for x
-            var y = document.getElementById("y").value; // grab the current value for y
-            xs.push(x) // append that value to the xs
-            ys.push(y) // append that value to the ys
-            document.getElementById('x').value = parseInt(x)+1; // add 1 to the x automatically
             data=[];
             for(var i=0;i<xs.length;i++){
             console.log(`${i}`);
@@ -70,7 +64,6 @@ model.compile({loss: 'meanSquaredError', optimizer: 'adam'}); // compile with pa
                     },
                 });
               });
-        }
     </script>
   </body>
 </html>
