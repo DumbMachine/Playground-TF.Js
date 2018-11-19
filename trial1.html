@@ -1,0 +1,104 @@
+<html>
+  <head>
+    <!-- Loading in TensorFlow.js version 0.11.2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.11.2"> </script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js"> </script>
+  </head>
+  <body>
+    <div>
+        <input type="button" id="append" value="submit">
+        <button>Times</button>
+        <div><p class="times">Run 0 times</p>
+        <p class="error">MseError: 0</p></div>
+    </div>
+    <div style="padding:50px">
+        <canvas id="myChart" width="300" height="150"></canvas>
+    </div>
+
+    <script>
+      function timeChg(x){
+        let p = d3.select(".times");
+        p.text(`${x} times`);
+      }
+      function errorChg(x){
+        let p = d3.select(".error");
+        p.text(`${x} MSE`);
+      }
+      function calError(y_true,y_pred){
+        let error = 0;
+        for(let i=0;i<y_true.length;i++){
+          error+=(y_true[i]-y_pred[i])**2
+        }
+        return error/y_true.length;
+      }
+        let nos=0;
+        let er=0;
+        const xsr=[];
+        const ysr=[];
+        for(let i=0;i<10;i++){
+          xsr[i]=Math.random()*100;
+          ysr[i]=Math.random()*100;
+        }
+        const xs = [1,2,3,4,5,6,7,8,9,10]; // starts empty, to be populated with .push
+        const ys = [];
+        for(let i=0;i<xsr.length;i++){
+          if(Math.random()*10>5){
+          ysr[i]=3*xsr[i]+Math.random()*100;}
+          else{
+          ysr[i]=3*xsr[i]-Math.random()*100;
+          }
+        } // starts empty, to be populated with .push
+        var bestfit = []; // to be populated by tf.js
+        
+        //Create the model
+        const model = tf.sequential();
+model.add(tf.layers.dense({units: 512, inputShape: [1]})); // layer 1
+model.add(tf.layers.dense({units: 256, inputShape: [128], activation: "relu"})); // layer 2
+model.add(tf.layers.dense({units: 128, inputShape: [128], activation: "relu"}));
+model.add(tf.layers.dense({units: 1, inputShape: [128]})); // output layer
+model.compile({loss: 'meanSquaredError', optimizer: 'adam'}); // compile with params
+
+
+            data=[];
+            for(var i=0;i<xsr.length;i++){
+            data.push({x:xsr[i],y:ysr[i]});
+            }
+            // Train the model...then:
+            document.getElementById("append").onclick = ()=>{for(let i=0;i<1;i++){
+              timeChg(nos);
+            model.fit(tf.tensor(xsr), tf.tensor(ysr),{epochs:1})
+                bestfit = model.predict(tf.tensor(xsr, [xsr.length, 1])).dataSync();
+                er=calError(ysr,bestfit);
+                errorChg(er);
+                nos+=1; // create best-fit line from xs data
+                var ctx = document.getElementById("myChart").getContext('2d'); // begin chart
+                // Chart data and settings:
+                var myChart = new Chart(ctx, {
+                    type: 'line',
+                    options: {scales:{yAxes: [{ticks: {beginAtZero: true}}]}},
+                    data: {
+                      animations: {
+                        duration: 1000,
+                      },
+                        labels: xsr,
+                        datasets: [
+                        {
+                            label: 'Best Fit line',
+                            data: bestfit,
+                            borderWidth: 1,
+                            borderColor: '#FF0000',
+                            backgroundColor: 'rgba(1,1,1,0)'
+                        },{
+      type: 'bubble',
+      label: 'Real',
+      data: data,
+      backgroundColor: "rgba(76,78,80, .7)",
+      borderColor: "transparent"
+    },]
+                    },
+                });}}
+    </script>
+  </body>
+</html>
